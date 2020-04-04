@@ -4,16 +4,24 @@ kivy.require('1.11.1')
 from kivy.app import App
 from kivy.uix.label import Label
 from kivy.uix.widget import Widget
-from kivy.uix.button import Button
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.textinput import TextInput
 
-class Test(Button):
+class CalcDisplay(BoxLayout):
+    pass
+
+class ResultsDisplay(TextInput):
+    pass
+
+class ButtonsDisplay(GridLayout):
     pass
 
 class CalcApp(App):
     def build(self):
-        test = Test()
+        calcDisplay = CalcDisplay()
 
-        return test
+        return calcDisplay 
 
 if __name__ == '__main__':
     CalcApp().run()
