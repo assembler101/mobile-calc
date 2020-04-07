@@ -69,9 +69,11 @@ class CalcDisplay(BoxLayout):
             return
 
         # parse the operators left to right, using BEDMAS
-        value = self.__calcValue(eqn)
+        answer = self.__calcValue(eqn)
 
-        self.resultsDsp.text = '=' + str(value)
+        # format answer decimal places
+        self.resultsDsp.text = '=' + ('%.5g' % answer)
+        print('%.5f' % answer)
         self.doneCalc = True
 
     def __calcValue(self, eqn):
@@ -112,6 +114,7 @@ class CalcDisplay(BoxLayout):
         # don't display trailing decimal if number is int
         if total % 1 == 0:
             total = int(total)
+
         return total
 
     def __verifyEqn(self, eqn):
