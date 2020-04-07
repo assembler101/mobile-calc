@@ -57,7 +57,7 @@ class CalcDisplay(BoxLayout):
         # remove all spaces for easier computation
         eqn = eqn.replace(' ', '')
 
-        if len(eqn) == 0:
+        if len(eqn) == 0 or eqn[0] == '=':
             return
         
         if len(eqn) == 0: return
@@ -82,34 +82,43 @@ class CalcDisplay(BoxLayout):
         # start iteration at length of first num (prev num)
         i = len(prevNum)
 
-        prevNum = int(prevNum)
+        prevNum = float(prevNum)
         while i < len(eqn):
             operator = eqn[i]           
-
             currentNum = regex.match(reNumMatch, eqn[i+1:])
             
             if currentNum == None:
                 break
 
-            i += len(currentNum.group())
-            currentNum = int(currentNum.group())
+            i += len(currentNum.group()) + 1
+            currentNum = float(currentNum.group())
 
             # set current number to negative if subtract operator
             if operator == '-':
                 currentNum = -currentNum
+            # apply BEDMAS calculation to multiplication and division
+            elif operator == '×':
+                prevNum *= currentNum
+                continue
+            elif operator == '÷':
+                prevNum /= currentNum
+                continue
 
             total += prevNum
             prevNum = currentNum
-            i += 1
 
         total += prevNum
+
+        # don't display trailing decimal if number is int
+        if total % 1 == 0:
+            total = int(total)
         return total
 
     def __verifyEqn(self, eqn):
         numMatch = r'(?:\d+\.\d*|\d*\.\d+|\d+)'
 
         # use regex verification
-        re = regex.compile(r'^(?:' + numMatch + '[-+×÷])*\d+$')
+        re = regex.compile(r'^(?:' + numMatch + '[-+×÷])*' + numMatch + '+$')
 
         match = regex.search(re, eqn)
 
