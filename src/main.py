@@ -10,20 +10,38 @@ from kivy.properties import ObjectProperty
 
 from kivy.core.window import Window
 
+import regex
+
 class CalcDisplay(BoxLayout):
     resultsDsp = ObjectProperty(None)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.operators = {
+            '+': True,
+            '-': True,
+            '×': True,
+            '÷': True
+        }
+
+        # we will use this to clear the results when done calculations
+        self.doneCalc = False
+
+    # adds an operator or num depending on clicked button
+    def addChar(self, char):
+        if self.doneCalc:
+            self.resultsDsp.text = ''
+            self.doneCalc = False
+
+        charStr = str(char)
+
+        if self.operators.get(charStr):
+            # add spacing for the operator
+            self.resultsDsp.text += f' {charStr} '
+        else:
+            self.resultsDsp.text += charStr
     
-    def addNum(self, num):
-        # append the num to results display
-        self.resultsDsp.text += str(num)
-
-    def addOperator(self, operator):
-        # append the operator to results display
-        self.resultsDsp.text += f' {operator} '
-
-    def addDecimal(self, decimal):
-        self.resultsDsp.text += str(decimal)
-
     def deleteRightmostChar(self):
         # trim possible spaces due to spaces between operators
         self.resultsDsp.text = self.resultsDsp.text.rstrip()
@@ -33,10 +51,72 @@ class CalcDisplay(BoxLayout):
 
         self.resultsDsp.text = self.resultsDsp.text.rstrip()
 
-    def calcValue(self):
-        # parse the operators left to right
-        pass
+    def displayAnswer(self):
+        eqn = self.resultsDsp.text
 
+        # remove all spaces for easier computation
+        eqn = eqn.replace(' ', '')
+
+        if len(eqn) == 0:
+            return
+        
+        if len(eqn) == 0: return
+        if not self.__verifyEqn(eqn):
+            # display error message
+            self.resultsDsp.text = 'Error'
+            self.doneCalc = True
+
+            return
+
+        # parse the operators left to right, using BEDMAS
+        value = self.__calcValue(eqn)
+
+        self.resultsDsp.text = '=' + str(value)
+        self.doneCalc = True
+
+    def __calcValue(self, eqn):
+        reNumMatch = regex.compile(r'^(?:\d+\.\d*|\d*\.\d+|\d+)')
+        total = 0
+        prevNum = regex.match(reNumMatch, eqn).group()
+
+        # start iteration at length of first num (prev num)
+        i = len(prevNum)
+
+        prevNum = int(prevNum)
+        while i < len(eqn):
+            operator = eqn[i]           
+
+            currentNum = regex.match(reNumMatch, eqn[i+1:])
+            
+            if currentNum == None:
+                break
+
+            i += len(currentNum.group())
+            currentNum = int(currentNum.group())
+
+            # set current number to negative if subtract operator
+            if operator == '-':
+                currentNum = -currentNum
+
+            total += prevNum
+            prevNum = currentNum
+            i += 1
+
+        total += prevNum
+        return total
+
+    def __verifyEqn(self, eqn):
+        numMatch = r'(?:\d+\.\d*|\d*\.\d+|\d+)'
+
+        # use regex verification
+        re = regex.compile(r'^(?:' + numMatch + '[-+×÷])*\d+$')
+
+        match = regex.search(re, eqn)
+
+        if match == None:
+            return False
+        return True
+        
 class ResultsDisplay(TextInput):
     pass
 
